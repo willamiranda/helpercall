@@ -34,7 +34,7 @@ function AuthProvider({ children }) {
         await signInWithEmailAndPassword(auth, email, password)
             .then(async (value) => {
                 let uid = value.user.uid;
-                
+
                 const docRef = doc(db, "users", uid);
                 const docSnap = await getDoc(docRef)
 
@@ -112,7 +112,9 @@ function AuthProvider({ children }) {
             signUp,
             logout,
             loadingAuth,
-            loading
+            loading,
+            storageUser,
+            setUser
         }}>
 
             {children}
