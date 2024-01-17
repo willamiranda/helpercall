@@ -6,6 +6,11 @@ import { FiSettings, FiUpload } from 'react-icons/fi'
 import avatar from '../../assets/avatar.png'
 import { AuthContext } from "../../contexts/auth"
 
+import { db, storage } from "../../services/firebaseConnection"
+import { doc, updateDoc } from "firebase/firestore"
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { toast } from 'react-toastify'
+
 import './profile.css'
 
 export default function Profile() {
@@ -13,7 +18,7 @@ export default function Profile() {
     const { user, storageUser, setUser, logout } = useContext(AuthContext)
     const [avatarUrl, setAvatarUrl] = useState(user && user.avatarUrl)
     const [imageAvatar, setImageAvatar] = useState(null);
-    const [nome, setNome] = useState(user && user.name)
+    const [name, setNome] = useState(user && user.name)
     const [email, setEmail] = useState(user && user.email)
 
     function handleFile(e) {
@@ -29,6 +34,57 @@ export default function Profile() {
             }
         }
     }
+    async function handleUpload() {
+        const currentUid = user.uid;
+        const uploadRef = ref(storage, `images/${currentUid}/${imageAvatar.name}`)
+        const uploadTastk = uploadBytes(uploadRef, imageAvatar)
+            .then((snapshot) => {
+
+                getDownloadURL(snapshot.ref).then(async (downloadURL) => {
+                    let urlFoto = downloadURL;
+
+                    const docRef = doc(db, "users", user.uid)
+                    await updateDoc(docRef, {
+                        avatarUrl: urlFoto,
+                        name: name
+                    })
+                        .then(() => {
+                            let data = {
+                                ...user,
+                                name: name,
+                                avatarUrl: urlFoto,
+                            }
+
+                            setUser(data)
+                            storageUser(data)
+                            toast.success("Atualizado com sucesso")
+                        })
+                })
+
+            })
+    }
+
+    async function handleSubmit(e) {
+        e.preventDefault();
+        if (imageAvatar === null && name !== '') {
+            const docRef = doc(db, "users", user.uid)
+            await updateDoc(docRef, {
+                name: name,
+            })
+                .then(() => {
+                    let data = {
+                        ...user,
+                        name: name,
+                    }
+
+                    setUser(data)
+                    storageUser(data)
+                    toast.success("Atualizado com sucesso")
+                })
+        } else if (name !== '' && imageAvatar !== null) {
+            handleUpload()
+        }
+    }
 
 
 
@@ -42,7 +98,7 @@ export default function Profile() {
 
                 <div className="container">
 
-                    <form className="form-profile">
+                    <form className="form-profile" onSubmit={handleSubmit} >
 
                         <label className="label-avatar">
 
@@ -61,7 +117,7 @@ export default function Profile() {
                         </label>
 
                         <label>Nome</label>
-                        <input type="text" value={nome} onChange={(e) => setNome(e.value.target)} />
+                        <input type="text" value={name} onChange={(e) => setNome(e.target.value)} />
 
                         <label>Email</label>
                         <input type="text" value={email} disabled={true} />
