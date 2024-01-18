@@ -10,6 +10,7 @@ import { collection, getDocs, orderBy, limit, startAfter, query } from 'firebase
 import { db } from '../../services/firebaseConnection'
 
 import { format } from 'date-fns'
+import Modal from '../../components/Modal'
 
 import "./dashboard.css"
 
@@ -99,6 +100,7 @@ export default function Dashboard() {
     return (
         <div>
             <Header />
+
             <div className="content">
                 <Title name="Chamados">
                     <FiMessageSquare size={25} />
@@ -157,12 +159,15 @@ export default function Dashboard() {
                             {loadingMore && <h3>Buscando Mais Chamados...</h3>}
                             {!loadingMore && !isEmpty && <button onClick={handleMore}
                                 className='btn-more'>Buscar mais</button>}
+
                         </>
                     )}
                 </>
 
             </div>
 
+            <Modal />
         </div >
+
     )
 }
